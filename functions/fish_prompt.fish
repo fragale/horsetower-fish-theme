@@ -1,4 +1,33 @@
 function fish_prompt
+  #
+  # HorseTower: improve command color contrast (run once per session)
+  #
+  if not set -q __horsetower_cmdcolors_done
+    set -g __horsetower_cmdcolors_done 1
+
+    # Command = bright cyan (universal, so syntax highlighting uses it)
+    set -U fish_color_command brcyan
+
+    # Invalid command / errors = bright red bold
+    set -U fish_color_error brred --bold
+  end
+
+
+  #
+  # HorseTower: force ls directories to bright cyan (run once per session)
+  #
+  if not set -q __horsetower_lscolors_done
+    set -g __horsetower_lscolors_done 1
+
+    # Ensure fish default LS_COLORS exists
+    if not set -q LS_COLORS
+      __fish_set_lscolors
+    end
+
+    # Append directory color override (last one wins)
+    set -gx LS_COLORS "$LS_COLORS:di=01;36"
+  end
+
   # Cache exit status
   set -l last_status $status
 
@@ -16,7 +45,11 @@ function fish_prompt
   end
 
   # Setup colors
-  set -l hostcolor (set_color (uname -n | md5sum | cut -f1 -d' ' | tr -d '\n' | tail -c6))
+  if not set -q __horsetower_hostcolor
+    set -g __horsetower_hostcolor (uname -n | md5sum | cut -f1 -d' ' | tr -d '\n' | tail -c6)
+  end
+  set -l hostcolor (set_color $__horsetower_hostcolor)
+
   set -l normal (set_color normal)
   set -l white (set_color FFFFFF)
   set -l turquoise (set_color 5fdfff)
@@ -38,6 +71,8 @@ function fish_prompt
   set -g __fish_git_prompt_show_informative_status true
 
   set -l current_user (whoami)
+
+  set -q THEME_HORSETOWER_VI_MODE; or set -g THEME_HORSETOWER_VI_MODE yes
 
   ##
   ## Line 1
@@ -62,12 +97,11 @@ function fish_prompt
   ##
   ## Support for vi mode
   ##
-  set -l lambdaViMode "$THEME_LAMBDA_VI_MODE"
+  set -l htViMode "$THEME_HORSETOWER_VI_MODE"
 
-  # Do nothing if not in vi mode
   if test "$fish_key_bindings" = fish_vi_key_bindings
       or test "$fish_key_bindings" = fish_hybrid_key_bindings
-    if test -z (string match -ri '^no|false|0$' $lambdaViMode)
+    if test -z (string match -ri '^no|false|0$' $htViMode)
       set_color --bold
       echo -n $white'─['
       switch $fish_bind_mode
@@ -96,4 +130,3 @@ function fish_prompt
   ##
   echo -n $hostcolor'─'$white$__fish_prompt_char $normal
 end
-
