@@ -16,7 +16,7 @@ readability, performance and DevOps workflows.
 ## Installation (Oh My Fish)
 
 ```fish
-omf install https://github.com/fragale/horsetower
+omf install https://github.com/fragale/horsetower-fish-theme
 omf theme horsetower
 ```
 
